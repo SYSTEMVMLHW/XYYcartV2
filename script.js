@@ -1,7 +1,7 @@
 // 产品选购页面JavaScript功能
 class ProductSelector {
     constructor() {
-        this.apiUrl = 'https://cloud.hkmc.online/v1/products';
+        this.apiUrl = 'https://app1.xuanyiy.cn/v1/products';
         this.data = null;
         this.currentFirstGroup = null;
         this.currentSecondGroup = null;
@@ -628,3 +628,4 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
     console.error('未处理的Promise拒绝:', event.reason);
 });
+
