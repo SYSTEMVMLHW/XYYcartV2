@@ -5,9 +5,24 @@ class ProductSelector {
         this.data = null;
         this.currentFirstGroup = null;
         this.currentSecondGroup = null;
+        this.bindProductTypeCardEvents();
         
         this.init();
     }
+
+    bindProductTypeCardEvents() {
+        const container = document.getElementById('productTypeCards');
+        if (!container) return;
+        
+        container.addEventListener('click', e => {
+            const card = e.target.closest('.product-type-card');
+            if (card && this.data?.first_group) {
+                const index = [...container.children].indexOf(card);
+                this.selectFirstGroup(this.data.first_group[index], card);
+            }
+        });
+    }
+
 
     async init() {
         try {
