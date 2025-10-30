@@ -5,9 +5,24 @@ class ProductSelector {
         this.data = null;
         this.currentFirstGroup = null;
         this.currentSecondGroup = null;
+        this.bindProductTypeCardEvents();
         
         this.init();
     }
+
+    bindProductTypeCardEvents() {
+        const container = document.getElementById('productTypeCards');
+        if (!container) return;
+        
+        container.addEventListener('click', e => {
+            const card = e.target.closest('.product-type-card');
+            if (card && this.data?.first_group) {
+                const index = [...container.children].indexOf(card);
+                this.selectFirstGroup(this.data.first_group[index], card);
+            }
+        });
+    }
+
 
     async init() {
         try {
@@ -123,64 +138,16 @@ class ProductSelector {
         return [parts[0] || '', parts[1] || ''];
     }
 
-    // 国家缩写到emoji编码的映射
     getCountryFlag(countryCode) {
-        const countryFlags = {
-            'CN': '1f1e8-1f1f3', // 中国
-            'HK': '1f1ed-1f1f0', // 香港
-            'US': '1f1fa-1f1f8', // 美国
-            'JP': '1f1ef-1f1f5', // 日本
-            'SG': '1f1f8-1f1ec', // 新加坡
-            'TW': '1f1f9-1f1fc', // 台湾
-            'KR': '1f1f0-1f1f7', // 韩国
-            'GB': '1f1ec-1f1e7', // 英国
-            'DE': '1f1e9-1f1ea', // 德国
-            'FR': '1f1eb-1f1f7', // 法国
-            'CA': '1f1e8-1f1e6', // 加拿大
-            'AU': '1f1e6-1f1fa', // 澳大利亚
-            'IN': '1f1ee-1f1f3', // 印度
-            'BR': '1f1e7-1f1f7', // 巴西
-            'RU': '1f1f7-1f1fa', // 俄罗斯
-            'IT': '1f1ee-1f1f9', // 意大利
-            'ES': '1f1ea-1f1f8', // 西班牙
-            'NL': '1f1f3-1f1f1', // 荷兰
-            'SE': '1f1f8-1f1ea', // 瑞典
-            'NO': '1f1f3-1f1f4', // 挪威
-            'DK': '1f1e9-1f1f0', // 丹麦
-            'FI': '1f1eb-1f1ee', // 芬兰
-            'CH': '1f1e8-1f1ed', // 瑞士
-            'AT': '1f1e6-1f1f9', // 奥地利
-            'BE': '1f1e7-1f1ea', // 比利时
-            'PL': '1f1f5-1f1f1', // 波兰
-            'CZ': '1f1e8-1f1ff', // 捷克
-            'HU': '1f1ed-1f1fa', // 匈牙利
-            'RO': '1f1f7-1f1f4', // 罗马尼亚
-            'BG': '1f1e7-1f1ec', // 保加利亚
-            'GR': '1f1ec-1f1f7', // 希腊
-            'PT': '1f1f5-1f1f9', // 葡萄牙
-            'IE': '1f1ee-1f1ea', // 爱尔兰
-            'LU': '1f1f1-1f1fa', // 卢森堡
-            'MT': '1f1f2-1f1f9', // 马耳他
-            'CY': '1f1e8-1f1fe', // 塞浦路斯
-            'EE': '1f1ea-1f1ea', // 爱沙尼亚
-            'LV': '1f1f1-1f1fb', // 拉脱维亚
-            'LT': '1f1f1-1f1f9', // 立陶宛
-            'SI': '1f1f8-1f1ee', // 斯洛文尼亚
-            'SK': '1f1f8-1f1f0', // 斯洛伐克
-            'HR': '1f1ed-1f1f7', // 克罗地亚
-            'ME': '1f1f2-1f1ea', // 黑山
-            'RS': '1f1f7-1f1f8', // 塞尔维亚
-            'BA': '1f1e7-1f1e6', // 波黑
-            'MK': '1f1f2-1f1f0', // 北马其顿
-            'AL': '1f1e6-1f1f1', // 阿尔巴尼亚
-            'XK': '1f1fd-1f1f0'  // 科索沃
-        };
-        
-        const emojiCode = countryFlags[countryCode.toUpperCase()];
-        if (emojiCode) {
-            return `https://cdn.bootcdn.net/ajax/libs/twemoji/15.1.0/svg/${emojiCode}.svg`;
-        }
-        return '';
+        if (!/^[A-Za-z]{2}$/.test(countryCode)) return { emoji: '', svg: '' };
+
+        const upper = countryCode.toUpperCase();
+        const codePoints = [...upper].map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
+        const emoji = String.fromCodePoint(...codePoints);
+        const hex = codePoints.map(cp => cp.toString(16)).join('-');
+        const svg = `https://cdn.bootcdn.net/ajax/libs/twemoji/15.1.0/svg/${hex}.svg`;
+
+        return { emoji, svg };
     }
 
     parseSecondGroupName(nameString) {
@@ -190,31 +157,24 @@ class ProductSelector {
         let emoji = parts[2] || '';
         let flagIcon = '';
 
-        // 检测是否有国家缩写或emoji编码
         if (name.includes('^')) {
-            // 处理 ^ 分隔符：前面是国家缩写
             const [countryCode, ...nameParts] = name.split('^');
-            name = nameParts.join('^'); // 重新组合名称部分
-            flagIcon = this.getCountryFlag(countryCode.trim());
+            name = nameParts.join('^');
+            const flagData = this.getCountryFlag(countryCode.trim());
+            flagIcon = flagData.svg;
         } else if (name.includes('|')) {
-            // 处理 | 分隔符：前面是emoji编码
             const [emojiCode, ...nameParts] = name.split('|');
-            name = nameParts.join('|'); // 重新组合名称部分
+            name = nameParts.join('|');
             flagIcon = `https://cdn.bootcdn.net/ajax/libs/twemoji/15.1.0/svg/${emojiCode.trim()}.svg`;
         }
 
-        // 若未检测到旗帜，则使用默认地球仪图标
         if (!flagIcon) {
             flagIcon = 'https://cdn.bootcdn.net/ajax/libs/twemoji/15.1.0/svg/1f30d.svg';
         }
 
-        return {
-            name: name,
-            tagline: tagline,
-            emoji: emoji,
-            flagIcon: flagIcon
-        };
+        return { name, tagline, emoji, flagIcon };
     }
+
 
     selectFirstGroup(group, clickedCard = null) {
         // 更新当前选择的一级分组
